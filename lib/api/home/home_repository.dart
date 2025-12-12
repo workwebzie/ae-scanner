@@ -4,10 +4,10 @@ import 'package:dio/dio.dart';
 class HomeRepository {
   static final api = ApiClient();
 
-  Future<Response> markAttendance() async {
+  Future<Response> markAttendance(tagId) async {
     try {
       final response = await api.post("/api/attendance/scan", data: {
-        "rfid": "RFID005",
+        "rfid":tagId  ,
         "subjectId": "SUB001",
         "teacherId": "TCH001",
       });
