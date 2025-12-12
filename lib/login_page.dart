@@ -1,7 +1,6 @@
- 
-
+import 'package:ae_scanner_app/api/login_function.dart';
 import 'package:ae_scanner_app/colors.dart';
-import 'package:ae_scanner_app/home_page.dart';
+import 'package:ae_scanner_app/api/home/home_page.dart';
 import 'package:ae_scanner_app/loginControler.dart';
 import 'package:ae_scanner_app/primary_field.dart';
 import 'package:bounce/bounce.dart';
@@ -70,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      "Login in to Attendease",
+                      "Login in to Attendease ClassRoom",
                       style: GoogleFonts.inter(
                           fontWeight: FontWeight.bold, fontSize: 26),
                     ),
@@ -99,7 +98,6 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           PrimaryInputField(
                             isObscure: true,
-                            
                             label: "Password",
                             txtController: _passwordController,
                             hintText: "Enter your Password",
@@ -138,46 +136,44 @@ class _LoginPageState extends State<LoginPage> {
                 child: Bounce(
                   duration: const Duration(milliseconds: 110),
                   onTap: () async {
-
-                    Get.to(()=>RfidListenerScreen());
-                    // loginController.loggined.value = true;
-                    // if (_formKey.currentState!.validate()) {
-                    //   LoginFunctions.handleLogin(
-                    //     userId: _idController.text,
-                    //     password: _passwordController.text,
-                    //     rememberMe: _rememberMe,
-                    //   ).then((sts) {
-                    //     if (sts) {
-                    //       Get.off(() => HomePage());
-                    //     }
-                    //   });
-                    // } else {
-                    //   loginController.loggined.value = false;
-                    // }
+                    loginController.loggined.value = true;
+                    if (_formKey.currentState!.validate()) {
+                      LoginFunctions.handleLogin(
+                        userId: _idController.text,
+                        password: _passwordController.text,
+                        rememberMe: _rememberMe,
+                      ).then((sts) {
+                        if (sts) {
+                          Get.to(() => RfidListenerScreen());
+                        }
+                      });
+                    } else {
+                      loginController.loggined.value = false;
+                    }
                   },
-                    child: Container(
-                      decoration: BoxDecoration(
-                          color: ThemeColors.primaryBlue,
-                          borderRadius: BorderRadius.circular(50)),
-                      padding: const EdgeInsets.all(10),
-                      child: Column(
-                        children: [
-                          Obx(() => !loginController.loggined.value
-                              ? Text(
-                                  'Login',
-                                  style: GoogleFonts.poppins(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w300,
-                                  ),
-                                )
-                              : const SpinKitThreeBounce(
+                  child: Container(
+                    decoration: BoxDecoration(
+                        color: ThemeColors.primaryBlue,
+                        borderRadius: BorderRadius.circular(50)),
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      children: [
+                        Obx(() => !loginController.loggined.value
+                            ? Text(
+                                'Login',
+                                style: GoogleFonts.poppins(
                                   color: Colors.white,
-                                  size: 20,
-                                )),
-                        ],
-                      ),
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              )
+                            : const SpinKitThreeBounce(
+                                color: Colors.white,
+                                size: 20,
+                              )),
+                      ],
                     ),
+                  ),
                 ),
               ),
             ],
