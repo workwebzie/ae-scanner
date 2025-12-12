@@ -3,7 +3,8 @@ import 'package:ae_scanner_app/login_page.dart';
 import 'package:bounce/bounce.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -144,7 +145,7 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(32.0),
+          padding: EdgeInsets.all(32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
@@ -240,24 +241,86 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
                       ],
                     ),
                   ),
-                  Expanded(child: 
-                  Container(
+                  Expanded(
+                      child: Container(
+                        padding: EdgeInsets.all(20),
+                       
                     decoration: BoxDecoration(
-
-                      border: Border.all(color: ThemeColors.primaryBlue),
-                      borderRadius: BorderRadius.circular(15,)
-                    ),
+                        border: Border.all(color: ThemeColors.primaryBlue),
+                        borderRadius: BorderRadius.circular(
+                          15,
+                        )),
                     child: Column(
-                      children: [
-                        Text("StudentDetails"),
-                        Text("data")
-                      ],
+                      children: [Text("StudentDetails",  style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: ThemeColors.primaryBlue),),
+                              Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.center,
+                                      children: [
+                                          Padding(
+                                          padding:
+                                              const EdgeInsets.only(left: 10,right: 10),
+                                          child: CircleAvatar(
+                                            radius: 30,
+                                            child: Image.asset(
+                                                "assets/images/man.png"),
+                                          ),
+                                        ),
+                                        Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              "Student ID :",
+                                              style: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.w400,
+                                                  fontSize: 13),
+                                            ),
+                                            Text(
+                                              "Student Name :",
+                                              style: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.w400,
+                                                  fontSize: 13),
+                                            ),
+                                          ],
+                                        ),
+                                      
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(  Icons.check),
+                                        Text(
+                                           
+                                              "Successfully Clocked in",
+                                          style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 13),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                )
+                              // NoDataWidget()
+                       
+                               
+                               ],
                     ),
-                  )
-                  )
+                  ))
                 ],
               ),
               Spacer(),
+
+              // Lottie.asset("assets/images/Girl meditating.json", height: 300),
               Image.asset(
                 "assets/images/kidasset.png",
                 height: 200,
@@ -265,6 +328,36 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+
+class NoDataWidget extends StatelessWidget {
+  const NoDataWidget({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+              height: Get.height / 7,
+              child: Lottie.asset(
+                "assets/images/Girl meditating.json",
+              )),
+          Padding(
+            padding: const EdgeInsets.only(top: 30),
+            child: Text(
+              "No data found",
+              style: TextStyle(fontSize: 15),
+            ),
+          )
+        ],
       ),
     );
   }
