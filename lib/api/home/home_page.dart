@@ -1,3 +1,6 @@
+import 'package:ae_scanner_app/api/home/drop_down.dart';
+import 'package:ae_scanner_app/api/home/faculty_controller.dart';
+import 'package:ae_scanner_app/api/home/faculty_function.dart';
 import 'package:ae_scanner_app/api/home/homeController.dart';
 import 'package:ae_scanner_app/api/home/home_function.dart';
 import 'package:ae_scanner_app/colors.dart';
@@ -34,6 +37,7 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
 
   // 1. Controller to capture the text entered by the RFID reader
   final TextEditingController _rfidController = TextEditingController();
+     FacultyController facultyController = Get.put(FacultyController());
   // 2. FocusNode to ensure the input field is always selected (crucial for continuous scanning)
   final FocusNode _rfidFocusNode = FocusNode();
 
@@ -47,7 +51,20 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       print("focus requested");
       _rfidFocusNode.requestFocus();
+      fetchInitialData();
     });
+  }
+
+  fetchInitialData() async {
+    await FacultyFunction.fnGetDepartments();
+            items.value = facultyController.faculties
+            .map(
+              (i) => SearchItemModel(
+                id: i.facultyId ?? "",
+                name: i.facultyName ?? "",
+              ),
+            )
+            .toList();
   }
 
   @override
@@ -57,21 +74,8 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
     super.dispose();
   }
 
-  // // 🔔 THE CORE FUNCTION CALLED WHEN A TAG IS READ
-  // void _handleRfidTag(String tagId) {
-  //   if (tagId.isEmpty) return;
-
-  // _sendTagToServer(tagId);
-  // Timer();
-
-  //   debugPrint('Tag Scanned: $tagId');
-
-  //   setState(() {
-  //     _lastScannedTag = tagId;
-  //     _lastScanTime = DateTime.now();
-  //   });
-
-  // }
+  final ValueNotifier<List<SearchItemModel>> items =
+      ValueNotifier<List<SearchItemModel>>(<SearchItemModel>[]);
 
   Timer? _clearTimer;
 
@@ -189,11 +193,32 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        const Text(
-                          'Ensure the RFID reader has focus on the input field below.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
+                        ValueListenableBuilder<List<SearchItemModel>>(
+                valueListenable:items,
+                builder: (context, val, child) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    width: Get.width / 4,
+                    child: SearchableDropdownDemo(
+                      onSelected: (selectedItem) {
+                        if (selectedItem == null) return;
+                        facultyController.selectedFacultyID.value =
+                            selectedItem.id;
+                        // AttendanceFunction.fnAttendanceDetails(
+                        //   selectedItem.id,
+                        // );
+                      },
+                      mode:   "Faculty",
+                      items: val,
+                    ),
+                  );
+                },
+              ),
+                        // const Text(
+                        //   'Ensure the RFID reader has focus on the input field below.',
+                        //   textAlign: TextAlign.center,
+                        //   style: TextStyle(fontSize: 16, color: Colors.grey),
+                        // ),
                         const SizedBox(height: 40),
 
                         Container(
@@ -400,7 +425,10 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
               Spacer(),
 
               // Lottie.asset("assets/images/Girl meditating.json", height: 300),
-              Image.asset("assets/images/kidasset.png", height: 200),
+              Opacity(
+                opacity: 0.5,
+                child: Image.asset("assets/images/logo.png", height: 200),
+              ),
             ],
           ),
         ),

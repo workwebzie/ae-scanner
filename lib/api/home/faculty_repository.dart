@@ -1,29 +1,32 @@
 import 'package:ae_scanner_app/api/api_manager.dart';
-import 'package:ae_scanner_app/api/home/faculty_controller.dart';
 import 'package:dio/dio.dart';
-import 'package:get/get.dart' hide Response;
- 
 
-class HomeRepository {
+class FacultyRepository {
+
+
   static final api = ApiClient();
-  FacultyController facultyController = Get.find();
 
-  Future<Response> markAttendance(tagId) async {
+
+
+
+
+
+  Future<Response> fnGetAllDepartment() async {
     try {
-      final response = await api.post("/api/attendance/scan", data: {
-        "rfid":tagId  ,
-        "subjectId":facultyController.selectedFacultyID.value,
-        "teacherId": "TCH001",
-      });
+      // 🔹 API call
+      final response = await api.get("/api/faculties", queryParams: {});
 
+      // ✅ Return response to caller
       return response;
     } on DioException catch (e) {
+      // ❌ Handle Dio (network/API) errors gracefully
       if (e.response != null) {
-        return e.response!;
+        print("❌ Login failed: ${e.response?.data}");
+        return e.response!; // Return the server response for handling
       } else {
         print("❌ Network error: ${e.message}");
         return Response(
-          requestOptions: RequestOptions(path: "/api/attendance/scan"),
+          requestOptions: RequestOptions(path: "/api/faculties"),
           data: {
             "success": false,
             "message": "Network error: ${e.message}",
@@ -34,7 +37,7 @@ class HomeRepository {
     } catch (e) {
       print("⚠️ Unexpected error: $e");
       return Response(
-        requestOptions: RequestOptions(path: "/api/attendance/scan"),
+        requestOptions: RequestOptions(path: "/api/departments"),
         data: {
           "success": false,
           "message": "Unexpected error: $e",
@@ -43,4 +46,6 @@ class HomeRepository {
       );
     }
   }
+
+
 }
