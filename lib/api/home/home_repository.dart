@@ -14,6 +14,7 @@ class HomeRepository {
         "rfid":tagId  ,
         "subjectId":facultyController.selectedFacultyID.value,
         "teacherId": "TCH001",
+        
       });
 
       return response;

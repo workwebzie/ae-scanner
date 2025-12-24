@@ -44,6 +44,8 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
   String _lastScannedTag = 'Waiting for RFID tap...';
   DateTime? _lastScanTime;
 
+   Timer? _focusTimer;
+
   @override
   void initState() {
     super.initState();
@@ -53,6 +55,14 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
       _rfidFocusNode.requestFocus();
       fetchInitialData();
     });
+
+
+        _focusTimer = Timer.periodic(Duration(seconds: 2), (timer) {
+      if (mounted) {
+        _rfidFocusNode.requestFocus();
+      }
+    });
+
   }
 
   fetchInitialData() async {
@@ -67,12 +77,22 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
             .toList();
   }
 
-  @override
+
+   @override
   void dispose() {
+    _clearTimer?.cancel();
+    _focusTimer?.cancel(); // Cancel periodic focus timer
     _rfidController.dispose();
     _rfidFocusNode.dispose();
     super.dispose();
   }
+
+  // @override
+  // void dispose() {
+  //   _rfidController.dispose();
+  //   _rfidFocusNode.dispose();
+  //   super.dispose();
+  // }
 
   final ValueNotifier<List<SearchItemModel>> items =
       ValueNotifier<List<SearchItemModel>>(<SearchItemModel>[]);
