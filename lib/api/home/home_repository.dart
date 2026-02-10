@@ -1,19 +1,23 @@
 import 'package:ae_scanner_app/api/api_manager.dart';
 import 'package:ae_scanner_app/api/home/faculty_controller.dart';
+import 'package:ae_scanner_app/modules/modules/module_controller.dart';
+import 'package:ae_scanner_app/modules/teacher/teacher_controller.dart';
 import 'package:dio/dio.dart';
 import 'package:get/get.dart' hide Response;
  
 
 class HomeRepository {
   static final api = ApiClient();
-  FacultyController facultyController = Get.find();
+  TeachersController teacherController = Get.find();
+  ModuleController moduleController = Get.find();
+
 
   Future<Response> markAttendance(tagId) async {
     try {
       final response = await api.post("/api/attendance/scan", data: {
         "rfid":tagId  ,
-        "subjectId":facultyController.selectedFacultyID.value,
-        "teacherId": "TCH001",
+        "mscode":moduleController.selectedModuleID.value,
+        "teacherId": teacherController.selectedTeacherID.value,
         
       });
 

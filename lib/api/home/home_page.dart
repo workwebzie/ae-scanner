@@ -1,9 +1,13 @@
 import 'package:ae_scanner_app/api/home/drop_down.dart';
-import 'package:ae_scanner_app/api/home/faculty_controller.dart';
-import 'package:ae_scanner_app/api/home/faculty_function.dart';
+// import 'package:ae_scanner_app/api/home/faculty_controller.dart';
+// import 'package:ae_scanner_app/api/home/faculty_function.dart';
 import 'package:ae_scanner_app/api/home/homeController.dart';
 import 'package:ae_scanner_app/api/home/home_function.dart';
 import 'package:ae_scanner_app/colors.dart';
+import 'package:ae_scanner_app/modules/modules/module_controller.dart';
+import 'package:ae_scanner_app/modules/modules/module_function.dart';
+import 'package:ae_scanner_app/modules/teacher/teacherFunction.dart';
+import 'package:ae_scanner_app/modules/teacher/teacher_controller.dart';
 import 'package:ae_scanner_app/login_page.dart';
 import 'package:bounce/bounce.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +41,9 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
 
   // 1. Controller to capture the text entered by the RFID reader
   final TextEditingController _rfidController = TextEditingController();
-     FacultyController facultyController = Get.put(FacultyController());
+  // FacultyController facultyController = Get.put(FacultyController());
+  TeachersController teachersController = Get.put(TeachersController());
+  ModuleController moduleController = Get.put(ModuleController());
   // 2. FocusNode to ensure the input field is always selected (crucial for continuous scanning)
   final FocusNode _rfidFocusNode = FocusNode();
 
@@ -66,15 +72,9 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
   }
 
   fetchInitialData() async {
-    await FacultyFunction.fnGetDepartments();
-            items.value = facultyController.faculties
-            .map(
-              (i) => SearchItemModel(
-                id: i.facultyId ?? "",
-                name: i.facultyName ?? "",
-              ),
-            )
-            .toList();
+    // await FacultyFunction.fnGetDepartments();
+    await TeacherFunction.fnGetAllTeachers();
+    // await ModuleFunction.fnGetAllModules();
   }
 
 
@@ -94,8 +94,7 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
   //   super.dispose();
   // }
 
-  final ValueNotifier<List<SearchItemModel>> items =
-      ValueNotifier<List<SearchItemModel>>(<SearchItemModel>[]);
+
 
   Timer? _clearTimer;
 
@@ -213,27 +212,79 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        ValueListenableBuilder<List<SearchItemModel>>(
-                valueListenable:items,
-                builder: (context, val, child) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    width: Get.width / 4,
-                    child: SearchableDropdownDemo(
-                      onSelected: (selectedItem) {
-                        if (selectedItem == null) return;
-                        facultyController.selectedFacultyID.value =
-                            selectedItem.id;
-                        // AttendanceFunction.fnAttendanceDetails(
-                        //   selectedItem.id,
-                        // );
-                      },
-                      mode:   "Faculty",
-                      items: val,
-                    ),
-                  );
-                },
-              ),
+                        // Teacher Dropdown
+                        Obx(() {
+                          final teacherItems = teachersController.teachers
+                              .map((e) => SearchItemModel(
+                                    id: e.teacherId ?? e.id ?? "",
+                                    name: e.name ?? "",
+                                  ))
+                              .toList();
+
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            width: Get.width / 4,
+                            child: SearchableDropdownDemo(
+                              onSelected: (selectedItem) {
+                                if (selectedItem == null) return;
+                                teachersController.selectedTeacherID.value =
+                                    selectedItem.id;
+                                // Fetch modules for the selected teacher
+                                // ModuleFunction.fnGetModulesByTeacher(selectedItem.id); // Removed: modules now fetched from timetable
+                                // Fetch timetable for the selected teacher
+                                TeacherFunction.fnGetTeacherTimetable(selectedItem.id);
+                                // Clear selected module when teacher changes
+                                moduleController.selectedModuleID.value = null;
+                              },
+                              mode: "Teacher",
+                              items: teacherItems,
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: 10),
+
+                        // Module Dropdown
+                        Obx(() {
+                          // Only show/enable if a teacher is selected
+                          if (teachersController.selectedTeacherID.value == null) {
+                            return Container(
+                               padding: const EdgeInsets.symmetric(horizontal: 20),
+                               width: Get.width / 4,
+                               child: Text("Select a teacher first", style: TextStyle(color: Colors.grey),)
+                            );
+                          }
+
+                          final moduleItems = moduleController.modules
+                              .map((e) => SearchItemModel(
+                                    id: e.code ?? e.id ?? "",
+                                    name: "${e.code ?? ""} - ${e.name ?? ""} (${e.programmeName ?? "N/A"})",
+                                  ))
+                              .toList();
+                          
+                          if (moduleItems.isEmpty) {
+                             return Container(
+                               padding: const EdgeInsets.symmetric(horizontal: 20),
+                               width: Get.width / 4,
+                               child: Text("No modules found for this teacher", style: TextStyle(color: Colors.grey),)
+                            );
+                          }
+
+                          return Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            width: Get.width / 4,
+                            child: SearchableDropdownDemo(
+                              onSelected: (selectedItem) {
+                                if (selectedItem == null) return;
+                                moduleController.selectedModuleID.value =
+                                    selectedItem.id;
+                              },
+                              mode: "Module",
+                              items: moduleItems,
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: 10),
+
                         // const Text(
                         //   'Ensure the RFID reader has focus on the input field below.',
                         //   textAlign: TextAlign.center,
