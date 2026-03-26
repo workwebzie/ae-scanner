@@ -5,7 +5,6 @@ import 'package:ae_scanner_app/api/home/homeController.dart';
 import 'package:ae_scanner_app/api/home/home_function.dart';
 import 'package:ae_scanner_app/colors.dart';
 import 'package:ae_scanner_app/modules/modules/module_controller.dart';
-import 'package:ae_scanner_app/modules/modules/module_function.dart';
 import 'package:ae_scanner_app/modules/teacher/teacherFunction.dart';
 import 'package:ae_scanner_app/modules/teacher/teacher_controller.dart';
 import 'package:ae_scanner_app/login_page.dart';
@@ -15,6 +14,8 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'dart:async';
+import 'package:intl/intl.dart';
+import 'package:ae_scanner_app/modules/teacher/teacher_timetable_model.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -51,6 +52,41 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
   DateTime? _lastScanTime;
 
    Timer? _focusTimer;
+
+  void _autoSelectModule() {
+    final timetable = teachersController.teacherTimetable.value;
+    if (timetable == null || timetable.timetableByDay == null) return;
+
+    final now = DateTime.now();
+    final String currentDay = DateFormat('EEEE').format(now);
+    final String currentTimeStr = DateFormat('HH:mm').format(now);
+
+    debugPrint("Checking timetable for $currentDay at $currentTimeStr");
+
+    List<ClassSession>? sessions = timetable.timetableByDay![currentDay];
+
+    if (sessions == null) {
+      // Try with day name from weekday number (1=Mon, 7=Sun)
+      final days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+      sessions = timetable.timetableByDay![days[now.weekday - 1]];
+    }
+
+    if (sessions != null) {
+      for (var session in sessions) {
+        if (session.startTime != null && session.endTime != null) {
+          if (currentTimeStr.compareTo(session.startTime!) >= 0 &&
+              currentTimeStr.compareTo(session.endTime!) <= 0) {
+            moduleController.selectedModuleID.value = session.mscode;
+            debugPrint("Auto-selected module: ${session.mscode}");
+            return;
+          }
+        }
+      }
+    }
+
+    moduleController.selectedModuleID.value = null;
+    debugPrint("No module scheduled for current time ($currentTimeStr on $currentDay)");
+  }
 
   @override
   void initState() {
@@ -225,16 +261,17 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 20),
                             width: Get.width / 4,
                             child: SearchableDropdownDemo(
-                              onSelected: (selectedItem) {
+                              onSelected: (selectedItem) async {
                                 if (selectedItem == null) return;
                                 teachersController.selectedTeacherID.value =
                                     selectedItem.id;
                                 // Fetch modules for the selected teacher
                                 // ModuleFunction.fnGetModulesByTeacher(selectedItem.id); // Removed: modules now fetched from timetable
                                 // Fetch timetable for the selected teacher
-                                TeacherFunction.fnGetTeacherTimetable(selectedItem.id);
-                                // Clear selected module when teacher changes
-                                moduleController.selectedModuleID.value = null;
+                                await TeacherFunction.fnGetTeacherTimetable(selectedItem.id);
+                                
+                                // Automatically select module based on time
+                                _autoSelectModule();
                               },
                               mode: "Teacher",
                               items: teacherItems,
@@ -243,9 +280,9 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
                         }),
                         const SizedBox(height: 10),
 
-                        // Module Dropdown
+                        // Module Display (Auto-selected based on time)
                         Obx(() {
-                          // Only show/enable if a teacher is selected
+                          // Only show if a teacher is selected
                           if (teachersController.selectedTeacherID.value == null) {
                             return Container(
                                padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -254,33 +291,59 @@ class _RfidListenerScreenState extends State<RfidListenerScreen> {
                             );
                           }
 
-                          final moduleItems = moduleController.modules
-                              .map((e) => SearchItemModel(
-                                    id: e.code ?? e.id ?? "",
-                                    name: "${e.code ?? ""} - ${e.name ?? ""} (${e.programmeName ?? "N/A"})",
-                                  ))
-                              .toList();
-                          
-                          if (moduleItems.isEmpty) {
-                             return Container(
-                               padding: const EdgeInsets.symmetric(horizontal: 20),
-                               width: Get.width / 4,
-                               child: Text("No modules found for this teacher", style: TextStyle(color: Colors.grey),)
+                          if (moduleController.selectedModuleID.value != null) {
+                            final selectedModule = moduleController.modules.firstWhereOrNull(
+                              (m) => m.code == moduleController.selectedModuleID.value || m.id == moduleController.selectedModuleID.value
+                            );
+
+                            return Container(
+                              padding: const EdgeInsets.all(15),
+                              width: Get.width / 4,
+                              decoration: BoxDecoration(
+                                color: ThemeColors.primaryBlue.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: ThemeColors.primaryBlue.withValues(alpha: 0.3)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Current Module",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: ThemeColors.primaryBlue,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    selectedModule != null
+                                        ? "${selectedModule.code} - ${selectedModule.name}"
+                                        : moduleController.selectedModuleID.value!,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  if (selectedModule?.programmeName != null)
+                                    Text(
+                                      selectedModule!.programmeName!,
+                                      style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+                                    ),
+                                ],
+                              ),
                             );
                           }
 
                           return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            width: Get.width / 4,
-                            child: SearchableDropdownDemo(
-                              onSelected: (selectedItem) {
-                                if (selectedItem == null) return;
-                                moduleController.selectedModuleID.value =
-                                    selectedItem.id;
-                              },
-                              mode: "Module",
-                              items: moduleItems,
-                            ),
+                             padding: const EdgeInsets.symmetric(horizontal: 20),
+                             width: Get.width / 4,
+                             child: Column(
+                               crossAxisAlignment: CrossAxisAlignment.start,
+                               children: [
+                                 Text("No module scheduled for this time", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),),
+                               ],
+                             )
                           );
                         }),
                         const SizedBox(height: 10),
