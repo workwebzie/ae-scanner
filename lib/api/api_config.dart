@@ -4,7 +4,10 @@ class ApiConfig {
   // 127.0.0.1
   // static const String devBaseUrl = "http://192.168.1.177:5000/";//home
   // static const String devBaseUrl ="http://13.201.187.19:5000/";
-  static const String devBaseUrl = "http://13.126.90.211:5000/";
+  // static const String devBaseUrl = "http://13.126.90.211:5000/";
+  static const String devBaseUrl = "https://attend-ease-hau0.onrender.com";
+
+  
 
   // static const String devBaseUrl = "http://192.168.0.115:5000/";//office
 
